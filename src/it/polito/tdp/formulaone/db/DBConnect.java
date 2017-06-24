@@ -9,7 +9,7 @@ import com.mchange.v2.c3p0.DataSources;
 
 public class DBConnect {
 	
-	private static String jdbcURL = "jdbc:mysql://localhost/formula1?user=root&password=root" ;
+	private static String jdbcURL = "jdbc:mysql://localhost/formula1?user=root" ;
 	
 	private static DataSource ds ;
 	

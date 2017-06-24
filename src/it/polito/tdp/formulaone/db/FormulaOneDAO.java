@@ -10,6 +10,7 @@ import java.util.List;
 
 import it.polito.tdp.formulaone.model.Circuit;
 import it.polito.tdp.formulaone.model.Constructor;
+import it.polito.tdp.formulaone.model.Driver;
 import it.polito.tdp.formulaone.model.Season;
 
 
@@ -110,6 +111,86 @@ public class FormulaOneDAO {
 			e.printStackTrace();
 			throw new RuntimeException("SQL Query Error");
 		}
+	}
+	
+	/*
+	 * Restiuisce la lista di piloti che hanno gareggiato nella stagione season 
+	 */
+	public List<Driver> getDriversforSeason(Season season){
+		String sql= "SELECT DISTINCT d.* " + 
+				"FROM races AS r, results AS res, drivers AS d " + 
+				"WHERE r.year=? " + 
+				"AND res.raceId=r.raceId " + 
+				"AND res.position is not null " + 
+				"AND res.driverId=d.driverId ";
+		
+		List<Driver> drivers=new ArrayList<>();
+		Connection conn= DBConnect.getConnection();
+		
+		try {
+
+			PreparedStatement st = conn.prepareStatement(sql);
+			
+			st.setInt(1, season.getYear().getValue());//getValue per ottenere int da year
+			
+			ResultSet rs = st.executeQuery();
+			
+			while(rs.next()){
+				Driver d= new Driver(rs.getInt("driverId"), rs.getString("driverref"), rs.getInt("number"),
+						rs.getString("code"), rs.getString("forename"), rs.getString("surname"),
+						rs.getDate("dob").toLocalDate(), rs.getString("nationality"), rs.getString("url"));
+				drivers.add(d);
+			}
+			
+			conn.close();
+			
+			return drivers;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Query Error");
+		}
+	}
+	
+	/*
+	 * Conta il numero di vittorie di d1 su d2 nella stagione season
+	 */
+	public Integer contaVittorie(Driver d1, Driver d2, Season season) {
+		String sql="SELECT count(r.raceId) AS cnt " + 
+				"FROM results AS r1, results AS r2, races AS r " + 
+				"WHERE r1.raceId=r2.raceId " + 
+				"AND r.raceId=r1.raceId " + 
+				"AND r.year=? " + 
+				"AND r1.position<r2.position " + 
+				"AND r1.driverId=? " + 
+				"AND r2.driverId=? ";
+		//non devo mettere la condizione (position is not null) perchè quando faccio il confronto tra le due posizioni mi restituisce sempre falso
+	
+		Integer count;
+		Connection conn= DBConnect.getConnection();
+		
+		try {
+
+			PreparedStatement st = conn.prepareStatement(sql);
+			
+			st.setInt(1, season.getYear().getValue());
+			st.setInt(2, d1.getDriverId());
+			st.setInt(3, d2.getDriverId());
+			
+			ResultSet rs = st.executeQuery();
+			
+			rs.next();
+			count=rs.getInt("cnt");
+			
+			conn.close();
+			
+			return count;
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	
+	
 	}
 
 
